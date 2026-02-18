@@ -62,17 +62,15 @@ const AI_MODES: AIMode[] = [
     description: "Challenges your assumptions, dismantles your excuses, and forces growth.",
     icon: Zap
   },
-    rapid-fire: {
-      id: "rapid-fire",
-      name: "Rapid Fire",
-      description: "Fast, sharp answers with no fluff—just pure signal.",
-      icon: Gauge
-    }
+  {
+    id: "rapid-fire",
+    name: "Rapid Fire",
+    description: "Fast, sharp answers with no fluff—just pure signal.",
+    icon: Gauge
   }
+]
 
-  const AI_MODES: AIMode[] = Object.values(AI_MODES_MAP)
-
-  export default function ChatPage() {
+export default function ChatPage() {
     const router = useRouter()
     const { data: session, isPending, refetch } = useSession()
     const user = session?.user
