@@ -4,12 +4,6 @@ import Groq from "groq-sdk"
 
 export const runtime = "nodejs"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: process.env.OPENAI_ORG_ID,
-  project: process.env.OPENAI_PROJECT_ID,
-})
-
 const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null
 
 // Mode-specific system prompts
@@ -311,33 +305,7 @@ export async function POST(req: Request) {
           "Cache-Control": "no-cache",
         },
       })
-    }
-
-    const tryOpenAI = async () => {
-      if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY")
-      
-      const model = "gpt-4o-mini"
-      
-      if (stream) {
-        const completion = await openai.chat.completions.create({
-          model,
-          messages: oaMessages as any,
-          temperature: 0.7,
-          max_tokens: 1000,
-          stream: true,
-        })
-        return streamToResponse(completion)
-      } else {
-        const completion = await openai.chat.completions.create({
-          model,
-          messages: oaMessages as any,
-          temperature: 0.7,
-          max_tokens: 800,
-        })
-        const reply = completion.choices?.[0]?.message?.content?.trim() || "I'm not sure how to respond to that."
-        return NextResponse.json({ reply })
-      }
-    }
+    }  
 
     const tryGroq = async () => {
       if (!groq) throw new Error("Missing GROQ_API_KEY")
@@ -367,28 +335,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // Try OpenAI first, fallback to Groq (web search context already added)
-    try {
-      return await tryOpenAI()
-    } catch (e: any) {
-      const msg = String(e?.message || "")
-      console.error("[OpenAI Error]", msg, e)
-      const isQuota = msg.includes("429") || msg.toLowerCase().includes("quota")
-      const isMissingKey = msg.includes("Missing OPENAI_API_KEY")
-      if ((isQuota || isMissingKey) && groq) {
-        try {
-          console.log("[Fallback] Attempting with Groq...")
-          return await tryGroq()
-        } catch (gErr: any) {
-          console.error("[Groq Error]", gErr)
-          return NextResponse.json({ error: gErr?.message || "Fallback provider error" }, { status: 500 })
-        }
-      }
-      return NextResponse.json({ error: msg || "Provider error" }, { status: 500 })
-    }
-  } catch (err: any) {
-    console.error("/api/chat error", err)
-    const message = typeof err?.message === "string" ? err.message : "Unexpected error"
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
+    // Use Groq only
+try {
+  return await tryGroq()
+} catch (gErr: any) {
+  console.error("[Groq Error]", gErr)
+  return NextResponse.json(
+    { error: gErr?.message || "Groq error" },
+    { status: 500 }
+  )
 }
