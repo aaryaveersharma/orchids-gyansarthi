@@ -943,7 +943,6 @@ export default function ChatPage() {
     } finally {
       isStreamingRef.current = false
     }
-    }
   
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
