@@ -344,4 +344,12 @@ try {
     { error: gErr?.message || "Groq error" },
     { status: 500 }
   )
+} 
+  } catch (err: any) {
+    console.error("/api/chat error", err)
+    return NextResponse.json(
+      { error: err?.message || "Unexpected error" },
+      { status: 500 }
+    )
+  }
 }
